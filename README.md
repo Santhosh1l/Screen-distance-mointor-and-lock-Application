@@ -23,7 +23,7 @@ A Andriod Studio app that enhances user safety and promotes healthy screen usage
 Clone the repository:
 
 ```bash
-git clone https://github.com/Santhosh1l/Screenlock-application.git
+git clone https://github.com/Santhosh1l/ScreenLock-Application.git
 cd my-application
 ```
 

@@ -62,7 +62,7 @@ MyApplication/
 │   │   │   │           └── myapplication/
 │   │   │   │               ├── MainActivity.java       // Main activity
 │   │   │   │               ├── LockScreenReceiver.java // Broadcast receiver
-│   │   │   │               └── OtherClasses.java      // Other classes
+│   │   │   │               └── LockScreenActivity.java      // Other classes
 │   │   │   ├── res/
 │   │   │   │   ├── layout/
 │   │   │   │   │   └── activity_main.xml  // Layout files

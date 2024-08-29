@@ -6,4 +6,9 @@
     <color name="teal_700">#018786</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
+
+        <color name="warning_color">#FF0000</color> <!-- Red color for warning -->
+        <color name="default_color">#000000</color> <!-- Black color for default text -->
+
+
 </resources>

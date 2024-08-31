@@ -28,6 +28,9 @@ import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import android.os.Handler;
+import android.os.Looper;
+
 import androidx.camera.core.CameraSelector;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -42,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
     private static final long OFF_DURATION = TimeUnit.SECONDS.toMillis(10);  // 10 seconds
     private static float LOCK_DISTANCE_THRESHOLD;
 
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable distanceCheckRunnable;
+    private FaceDetector detector; // Declare detector as a class member
     private TextureView cameraPreview;
     private TextView statusMessage;
 
@@ -50,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       LOCK_DISTANCE_THRESHOLD = getResources().getDimension(R.dimen.lock_distance_threshold);
+        LOCK_DISTANCE_THRESHOLD = getResources().getDimension(R.dimen.lock_distance_threshold);
 
         cameraPreview = findViewById(R.id.camera_preview);
         statusMessage = findViewById(R.id.status_message);
@@ -138,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
                 .build();
 
-        FaceDetector detector = FaceDetection.getClient(options);
+        detector = FaceDetection.getClient(options); // Initialize detector
         ImageAnalysis imageAnalysis = new ImageAnalysis.Builder().build();
 
         imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), image -> {
@@ -151,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
                 float avgBrightness = getAverageBrightness(mediaImage);
                 if (avgBrightness < BRIGHTNESS_THRESHOLD) {
                     // Adjust brightness (you'll need to implement increaseBrightness)
+                    statusMessage.setTextColor(getResources().getColor(R.color.default_color));
                     statusMessage.setText("Increasing brightness...");
                 }
 
@@ -161,10 +168,22 @@ public class MainActivity extends AppCompatActivity {
                                 float distance = distanceToCamera(KNOWN_WIDTH, FOCAL_LENGTH, faceWidth);
 
                                 if (distance < DANGER_DISTANCE) {
+                                    statusMessage.setTextColor(getResources().getColor(R.color.warning_color));
                                     statusMessage.setText("Go back! Your face is too close.");
+
+                                    // Schedule a distance check after the warning message
+                                    if (distanceCheckRunnable != null) {
+                                        handler.removeCallbacks(distanceCheckRunnable);
+                                    }
+                                    distanceCheckRunnable = () -> {
+                                        // Recheck the distance after a delay
+                                        checkDistanceAgain(inputImage);
+                                    };
+                                    handler.postDelayed(distanceCheckRunnable, 5000); // 5 seconds delay
                                     lockDevice();
                                     return;
                                 } else {
+                                    statusMessage.setTextColor(getResources().getColor(R.color.default_color));
                                     statusMessage.setText("Safe distance: " + distance + "mm");
                                 }
                             }
@@ -178,6 +197,27 @@ public class MainActivity extends AppCompatActivity {
         });
 
         cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis);
+    }
+
+    private void checkDistanceAgain(InputImage inputImage) {
+        // Reprocess the image to measure the distance again
+        detector.process(inputImage)
+                .addOnSuccessListener(faces -> {
+                    for (Face face : faces) {
+                        float faceWidth = face.getBoundingBox().width();
+                        float distance = distanceToCamera(KNOWN_WIDTH, FOCAL_LENGTH, faceWidth);
+
+                        statusMessage.setTextColor(distance < DANGER_DISTANCE
+                                ? getResources().getColor(R.color.warning_color)
+                                : getResources().getColor(R.color.default_color));
+                        statusMessage.setText(distance < DANGER_DISTANCE
+                                ? "Go back! Your face is too close."
+                                : "Safe distance: " + distance + "mm");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FaceDetection", "Face detection failed", e);
+                });
     }
 
     protected void lockDevice() {

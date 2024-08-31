@@ -2,13 +2,19 @@ package com.example.myapplication;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.TextureView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,6 +26,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceDetection;
@@ -28,8 +35,6 @@ import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import androidx.camera.core.CameraSelector;
-import com.google.common.util.concurrent.ListenableFuture;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,20 +45,25 @@ public class MainActivity extends AppCompatActivity {
     private static final float BRIGHTNESS_THRESHOLD = 100f;  // Brightness threshold
     private static final long ON_DURATION = TimeUnit.MINUTES.toMillis(10);  // 10 minutes
     private static final long OFF_DURATION = TimeUnit.SECONDS.toMillis(10);  // 10 seconds
-    private static float LOCK_DISTANCE_THRESHOLD;
+    private static final long WARNING_DURATION = 10000; // 10 seconds
 
     private TextureView cameraPreview;
     private TextView statusMessage;
+    private boolean isUserClose = false; // Flag to check if user is close
+
+    private ProcessCameraProvider cameraProvider; // Add this field to manage the camera lifecycle
+    private MediaPlayer warningSoundPlayer; // MediaPlayer for the warning sound
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-       LOCK_DISTANCE_THRESHOLD = getResources().getDimension(R.dimen.lock_distance_threshold);
-
         cameraPreview = findViewById(R.id.camera_preview);
         statusMessage = findViewById(R.id.status_message);
+
+        // Initialize MediaPlayer
+        warningSoundPlayer = MediaPlayer.create(this, R.raw.warning_sound);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -101,13 +111,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void stopCamera() {
-        ProcessCameraProvider cameraProvider = null;
-        try {
-            cameraProvider = ProcessCameraProvider.getInstance(this).get();
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        }
-
         if (cameraProvider != null) {
             cameraProvider.unbindAll();
             statusMessage.setText("Camera off. Waiting...");
@@ -119,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                cameraProvider = cameraProviderFuture.get();  // Assign cameraProvider here
                 bindCamera(cameraProvider);
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
@@ -142,32 +145,28 @@ public class MainActivity extends AppCompatActivity {
         ImageAnalysis imageAnalysis = new ImageAnalysis.Builder().build();
 
         imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), image -> {
-            @androidx.camera.core.ExperimentalGetImage
             ImageProxy mediaImage = image;
             if (mediaImage != null) {
                 InputImage inputImage = InputImage.fromMediaImage(mediaImage.getImage(), image.getImageInfo().getRotationDegrees());
 
-                // Check brightness
-                float avgBrightness = getAverageBrightness(mediaImage);
-                if (avgBrightness < BRIGHTNESS_THRESHOLD) {
-                    // Adjust brightness (you'll need to implement increaseBrightness)
-                    statusMessage.setText("Increasing brightness...");
-                }
-
                 detector.process(inputImage)
                         .addOnSuccessListener(faces -> {
+                            boolean userStillClose = false;
                             for (Face face : faces) {
                                 float faceWidth = face.getBoundingBox().width();
                                 float distance = distanceToCamera(KNOWN_WIDTH, FOCAL_LENGTH, faceWidth);
 
                                 if (distance < DANGER_DISTANCE) {
-                                    statusMessage.setText("Go back! Your face is too close.");
-                                    lockDevice();
-                                    return;
+                                    userStillClose = true;
+                                    lockDeviceIfStillClose();
                                 } else {
                                     statusMessage.setText("Safe distance: " + distance + "mm");
+                                    statusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.white)); // Normal message in white
                                 }
                             }
+
+                            // Update the flag based on the user's current distance
+                            isUserClose = userStillClose;
                             mediaImage.close();
                         })
                         .addOnFailureListener(e -> {
@@ -180,19 +179,61 @@ public class MainActivity extends AppCompatActivity {
         cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis);
     }
 
-    protected void lockDevice() {
-        // Lock the device screen (requires SYSTEM_ALERT_WINDOW permission or device admin privileges)
-        // This is just an example, actual implementation may vary
-        // Use an appropriate method to lock the screen or display a lock screen
+    protected void lockDeviceIfStillClose() {
+        // Show the warning message
+        statusMessage.setText("Your face is too close! The device will lock in 10 seconds if you stay too close...");
+        statusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light)); // Warning message in red
+
+        // Play the warning sound
+        if (!warningSoundPlayer.isPlaying()) {
+            warningSoundPlayer.start();
+        }
+
+        // Set the flag to true indicating the user is currently too close
+        isUserClose = true;
+
+        // Delay to recheck the user's distance after 10 seconds
+        new Handler().postDelayed(() -> {
+            if (isUserClose) { // Check if the user is still close
+                stopCamera();  // Turn off the camera before locking the device
+
+                DevicePolicyManager devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+                ComponentName componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
+
+                if (devicePolicyManager != null && devicePolicyManager.isAdminActive(componentName)) {
+                    devicePolicyManager.lockNow();
+
+                    // Stop the warning sound when the device is locked
+                    if (warningSoundPlayer.isPlaying()) {
+                        warningSoundPlayer.stop();
+                        warningSoundPlayer.prepareAsync();  // Prepare it for future use
+                    }
+                } else {
+                    Log.e("LockDevice", "Device Admin not active or null");
+                    // Notify the user or take alternative actions
+                }
+            } else {
+                statusMessage.setText("You moved back. Safe distance maintained.");
+                statusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.white)); // Normal message in white
+
+                // Stop the warning sound if the user moves back
+                if (warningSoundPlayer.isPlaying()) {
+                    warningSoundPlayer.stop();
+                    warningSoundPlayer.prepareAsync();  // Prepare it for future use
+                }
+            }
+        }, WARNING_DURATION);
     }
 
     private float distanceToCamera(float knownWidth, float focalLength, float perWidth) {
         return (knownWidth * focalLength) / perWidth;
     }
 
-    private float getAverageBrightness(ImageProxy image) {
-        // Implement a method to calculate the average brightness of the image
-        // Placeholder value, implement the actual brightness calculation here
-        return 120f;
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (warningSoundPlayer != null) {
+            warningSoundPlayer.release(); // Release the MediaPlayer resources
+        }
     }
 }

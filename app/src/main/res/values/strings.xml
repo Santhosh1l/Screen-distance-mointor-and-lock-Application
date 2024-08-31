@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ScreenDistanceLock</string>
+    <string name="notification_sound_path">android.resource://com.example.myapplication/raw/warning_sound</string>
 </resources>

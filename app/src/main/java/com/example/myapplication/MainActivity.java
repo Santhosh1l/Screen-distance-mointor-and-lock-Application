@@ -162,11 +162,23 @@ public class MainActivity extends AppCompatActivity {
                                 } else {
                                     statusMessage.setText("Safe distance: " + distance + "mm");
                                     statusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.white)); // Normal message in white
+
+                                    // Stop the warning sound if the user is at a safe distance
+                                    if (warningSoundPlayer.isPlaying()) {
+                                        warningSoundPlayer.stop();
+                                        warningSoundPlayer.prepareAsync();  // Prepare it for future use
+                                    }
                                 }
                             }
 
                             // Update the flag based on the user's current distance
                             isUserClose = userStillClose;
+
+                            // Play warning sound if the user is close
+                            if (isUserClose && !warningSoundPlayer.isPlaying()) {
+                                warningSoundPlayer.start();
+                            }
+
                             mediaImage.close();
                         })
                         .addOnFailureListener(e -> {
@@ -178,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
 
         cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis);
     }
+
 
     protected void lockDeviceIfStillClose() {
         // Show the warning message

@@ -222,9 +222,31 @@ public class MainActivity extends AppCompatActivity {
         // Set the flag to true indicating the user is currently too close
         isUserClose = true;
 
-        // Delay to recheck the user's distance after 10 seconds
+        // Check the user's distance every second during the warning duration
+        Handler handler = new Handler();
+        Runnable checkDistanceRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!isUserClose) {
+                    // Stop the warning sound immediately if the user moves back
+                    if (warningSoundPlayer.isPlaying()) {
+                        warningSoundPlayer.stop();
+                        warningSoundPlayer.prepareAsync();  // Prepare it for future use
+                    }
+                    statusMessage.setText("You moved back. Safe distance maintained.");
+                    statusMessage.setTextColor(ContextCompat.getColor(MainActivity.this, android.R.color.white)); // Normal message in white
+                } else {
+                    // Continue checking the distance if the user is still close
+                    handler.postDelayed(this, 1000);
+                }
+            }
+        };
+
+        handler.postDelayed(checkDistanceRunnable, 1000); // Start checking after 1 second
+
+        // Delay to lock the device after the full warning duration if the user stays too close
         new Handler().postDelayed(() -> {
-            if (isUserClose) { // Check if the user is still close
+            if (isUserClose) { // Check if the user is still close after the warning duration
                 stopCamera();  // Turn off the camera before locking the device
 
                 DevicePolicyManager devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
@@ -241,15 +263,6 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Log.e("LockDevice", "Device Admin not active or null");
                     // Notify the user or take alternative actions
-                }
-            } else {
-                statusMessage.setText("You moved back. Safe distance maintained.");
-                statusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.white)); // Normal message in white
-
-                // Stop the warning sound if the user moves back
-                if (warningSoundPlayer.isPlaying()) {
-                    warningSoundPlayer.stop();
-                    warningSoundPlayer.prepareAsync();  // Prepare it for future use
                 }
             }
         }, WARNING_DURATION);

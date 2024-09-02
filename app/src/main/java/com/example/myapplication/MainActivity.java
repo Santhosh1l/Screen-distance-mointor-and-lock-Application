@@ -211,7 +211,9 @@ public class MainActivity extends AppCompatActivity {
 
     protected void lockDeviceIfStillClose() {
         // Show the warning message
-        statusMessage.setText("Your face is too close! The device will lock in 10 seconds if you stay too close...");
+        statusMessage.setText("   Your face is too close! " +
+                "Go back otherwise..." +
+                "The device will lock in 10 seconds ...");
         statusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_light)); // Warning message in red
 
         // Play the warning sound

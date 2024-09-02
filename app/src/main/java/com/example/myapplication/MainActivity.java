@@ -1,10 +1,10 @@
 package com.example.myapplication;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.Build;
@@ -23,6 +23,7 @@ import androidx.camera.core.ExperimentalGetImage;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -36,9 +37,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
-    private ComponentName componentName;
-    private DevicePolicyManager devicePolicyManager;
-    private static final int REQUEST_CODE_ENABLE_ADMIN = 1;
 
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 1001;
     private static final float KNOWN_WIDTH = 160f;  // Average width of a face in mm
@@ -59,15 +57,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
-        componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
+        cameraPreview = findViewById(R.id.camera_preview);
+        statusMessage = findViewById(R.id.status_message);
 
-        if (!devicePolicyManager.isAdminActive(componentName)) {
-            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
-            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Explanation about why you need this permission");
-            startActivityForResult(intent, REQUEST_CODE_ENABLE_ADMIN);
+        // Initialize MediaPlayer
+        warningSoundPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    CAMERA_PERMISSION_REQUEST_CODE);
+        } else {
+            startCameraCycle();
         }
     }
 
@@ -158,23 +162,11 @@ public class MainActivity extends AppCompatActivity {
                                 } else {
                                     statusMessage.setText("Safe distance: " + distance + "mm");
                                     statusMessage.setTextColor(ContextCompat.getColor(this, android.R.color.white)); // Normal message in white
-
-                                    // Stop the warning sound if the user is at a safe distance
-                                    if (warningSoundPlayer.isPlaying()) {
-                                        warningSoundPlayer.stop();
-                                        warningSoundPlayer.prepareAsync();  // Prepare it for future use
-                                    }
                                 }
                             }
 
                             // Update the flag based on the user's current distance
                             isUserClose = userStillClose;
-
-                            // Play warning sound if the user is close
-                            if (isUserClose && !warningSoundPlayer.isPlaying()) {
-                                warningSoundPlayer.start();
-                            }
-
                             mediaImage.close();
                         })
                         .addOnFailureListener(e -> {
@@ -186,7 +178,6 @@ public class MainActivity extends AppCompatActivity {
 
         cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis);
     }
-
 
     protected void lockDeviceIfStillClose() {
         // Show the warning message

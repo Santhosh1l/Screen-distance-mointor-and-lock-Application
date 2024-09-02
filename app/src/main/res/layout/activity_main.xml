@@ -4,15 +4,18 @@
     android:layout_height="match_parent">
 
     <TextureView
-        android:id="@+id/camera_preview"
+        android:id="@+id/cameraPreview"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
     <TextView
-        android:id="@+id/status_message"
+        android:id="@+id/statusMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="Status Message"/>
+        android:textColor="@android:color/white"
+        android:padding="16dp"
+        android:textSize="18sp"
+        android:text="Status Message" />
 
 </RelativeLayout>

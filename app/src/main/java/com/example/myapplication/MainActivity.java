@@ -35,9 +35,15 @@ import com.google.mlkit.vision.face.FaceDetectorOptions;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 public class MainActivity extends AppCompatActivity {
+    private static final int REQUEST_CODE_ENABLE_ADMIN = 1;
 
+    private DevicePolicyManager devicePolicyManager;
+    private ComponentName componentName;
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 1001;
     private static final float KNOWN_WIDTH = 160f;  // Average width of a face in mm
     private static final float FOCAL_LENGTH = 600f;  // Needs to be calibrated
@@ -59,21 +65,32 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        cameraPreview = findViewById(R.id.camera_preview);
-        statusMessage = findViewById(R.id.status_message);
+        // Initialize UI components
+        cameraPreview = findViewById(R.id.cameraPreview);
+        statusMessage = findViewById(R.id.statusMessage);
 
-        // Initialize MediaPlayer
-        warningSoundPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+        // Existing code for Device Admin and other setups
+        devicePolicyManager = (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+        componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA},
-                    CAMERA_PERMISSION_REQUEST_CODE);
-        } else {
-            startCameraCycle();
+        if (!devicePolicyManager.isAdminActive(componentName)) {
+            Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
+            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Explanation about why you need this permission");
+            startActivityForResult(intent, REQUEST_CODE_ENABLE_ADMIN);
         }
+
+        // Check for camera permission and start the camera cycle
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            startCameraCycle();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_REQUEST_CODE);
+        }
+
+        // Initialize the MediaPlayer for warning sound
+        warningSoundPlayer = MediaPlayer.create(this, R.raw.warning_sound); // Make sure you have a warning sound file
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -113,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
     protected void stopCamera() {
         if (cameraProvider != null) {
             cameraProvider.unbindAll();
-            statusMessage.setText("Camera off. Waiting...");
+            statusMessage.setText("Resart...");
         }
     }
 
@@ -214,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
                 ComponentName componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
 
                 if (devicePolicyManager != null && devicePolicyManager.isAdminActive(componentName)) {
-                    devicePolicyManager.lockNow();
+                    devicePolicyManager.lockNow();  // Lock the device
 
                     // Stop the warning sound when the device is locked
                     if (warningSoundPlayer.isPlaying()) {
@@ -238,10 +255,23 @@ public class MainActivity extends AppCompatActivity {
         }, WARNING_DURATION);
     }
 
+
     private float distanceToCamera(float knownWidth, float focalLength, float perWidth) {
         return (knownWidth * focalLength) / perWidth;
     }
 
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_ENABLE_ADMIN) {
+            if (resultCode == RESULT_OK) {
+                // Device admin enabled successfully
+                Toast.makeText(this, "Device Admin enabled", Toast.LENGTH_SHORT).show();
+            } else {
+                // Device admin not enabled
+                Toast.makeText(this, "Failed to enable Device Admin", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
     @Override
     protected void onDestroy() {
         super.onDestroy();

@@ -38,60 +38,7 @@ Sync the project with Gradle:
 1. Click on `File` -> `Sync Project with Gradle Files`.
 2. Wait for the sync to complete.
 
-## Project Structure
 
-```plaintext
-MyApplication/
-│
-├── app/
-│   ├── build.gradle         // Module-level Gradle file
-│   ├── src/
-│   │   ├── androidTest/
-│   │   │   ├── java/
-│   │   │   │   └── com/
-│   │   │   │       └── example/
-│   │   │   │           └── myapplication/
-│   │   │   │               └── MainActivityInstrumentedTest.java   // Instrumentation tests
-│   │   │   └── res/
-│   │   │       └── values/
-│   │   │           └── strings.xml       // Strings used in tests (if needed)
-│   │   ├── main/
-│   │   │   ├── java/
-│   │   │   │   └── com/
-│   │   │   │       └── example/
-│   │   │   │           └── myapplication/
-│   │   │   │               ├── MainActivity.java       // Main activity
-│   │   │   │               ├── LockScreenReceiver.java // Broadcast receiver
-│   │   │   │               └── LockScreenActivity.java      // Other classes
-│   │   │   ├── res/
-│   │   │   │   ├── layout/
-│   │   │   │   │   └── activity_main.xml  // Layout files
-│   │   │   │   └── values/
-│   │   │   │       └── dimens.xml           // Dimensions and other resources
-│   │   │   │       └── strings.xml           // Strings for the app
-│   │   │   ├── AndroidManifest.xml          // Manifest file
-│   │   └── assets/                            // Asset files (if any)
-│   │
-│   ├── test/
-│   │   ├── java/
-│   │   │   └── com/
-│   │   │       └── example/
-│   │   │           └── myapplication/
-│   │   │               └── MainActivityUnitTest.java  // Unit tests
-│   │   └── res/
-│   │       └── values/
-│   │           └── strings.xml
-│   └── build.gradle
-│
-├── gradle/
-│   └── wrapper/
-│       └── gradle-wrapper.properties
-├── .gitignore
-├── gradle.properties
-├── settings.gradle
-└── build.gradle
-
-```
 
 ## Build and Run
 

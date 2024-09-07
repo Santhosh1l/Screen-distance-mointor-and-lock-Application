@@ -28,6 +28,9 @@ git clone https://github.com/Santhosh1l/Screen-distance-monitoring-and-lock-enha
 cd my-application
 ```
 
+# SCREENSHOTS
+
+![Image Alt](https://github.com/Santhosh1l/Screen-distance-mointor-and-lock/blob/ef6f3fee8fb56cfa3c4612086556e0d51facb2eb/Asking%20permission.jpeg)
 Open the project in Android Studio:
 
 1. Open Android Studio.

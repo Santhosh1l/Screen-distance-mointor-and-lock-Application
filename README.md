@@ -73,7 +73,7 @@ To use the app, follow these steps:
 
 1. **Open the App:** Launch the application on your device.
 2. **Accept Camera Access:** The app requires access to your camera to monitor the distance between your face and the screen.
-3. **Proximity Alert & Lock:** If you are too close to the screen, the app will display a warning. If you do not move back, the device will automatically lock, and the camera will turn off.
+3. **Proximity Alert & Lock:** If you are too close to the screen, the app will display a warning and audio alert message. If you do not move back, the device will automatically lock, and the camera will turn off.
 4. **Focus:** This app is designed to help reduce eye strain and prevent children from using mobile phones too close to their eyes.
 
 ---

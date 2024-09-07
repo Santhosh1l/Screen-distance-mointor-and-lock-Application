@@ -1,4 +1,3 @@
-
 # ScreenLock App
 
 An Android Studio app that enhances user safety and promotes healthy screen usage by monitoring the distance between the user and the smartphone screen. The application aims to prevent eye strain and discomfort by providing real-time warnings when the user is too close to the screen and automatically locking the device if the unsafe distance is maintained. Through the integration of machine learning and computer vision, this project seeks to create a practical and user-friendly solution that encourages healthier digital habits.

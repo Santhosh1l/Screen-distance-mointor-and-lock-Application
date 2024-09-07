@@ -5,6 +5,8 @@ An Android Studio app that enhances user safety and promotes healthy screen usag
 
 
 # App Name: ScreenDistanceLock
+## App icon
+![Image Alt](https://github.com/Santhosh1l/Screen-distance-mointor-and-lock/blob/28ae71207242ae0b5efd34b2f568722b869d7856/Screenshot%202024-09-07%20191146.png)
 ## Features
 
 - User-friendly interface.

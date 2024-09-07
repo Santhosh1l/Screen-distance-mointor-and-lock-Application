@@ -3,6 +3,8 @@
 
 An Android Studio app that enhances user safety and promotes healthy screen usage by monitoring the distance between the user and the smartphone screen. The application aims to prevent eye strain and discomfort by providing real-time warnings when the user is too close to the screen and automatically locking the device if the unsafe distance is maintained. Through the integration of machine learning and computer vision, this project seeks to create a practical and user-friendly solution that encourages healthier digital habits.
 
+
+# App Name: ScreenDistanceLock
 ## Features
 
 - User-friendly interface.
@@ -30,7 +32,8 @@ cd my-application
 
 # SCREENSHOTS
 
-![Image Alt](https://github.com/Santhosh1l/Screen-distance-mointor-and-lock/blob/ef6f3fee8fb56cfa3c4612086556e0d51facb2eb/Asking%20permission.jpeg)
+![Image Alt](https://github.com/Santhosh1l/Screen-distance-mointor-and-lock/blob/cc544d857e321603a0d68916f0c9ec0f9f68d1ee/permission.jpg)
+![Image Alt](https://github.com/Santhosh1l/Screen-distance-mointor-and-lock/blob/cc544d857e321603a0d68916f0c9ec0f9f68d1ee/MESSAGE.jpeg)
 Open the project in Android Studio:
 
 1. Open Android Studio.

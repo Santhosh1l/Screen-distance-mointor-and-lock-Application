@@ -27,7 +27,7 @@ An Android Studio app that enhances user safety and promotes healthy screen usag
 Clone the repository:
 
 ```bash
-git clone https://github.com/Santhosh1l/Screen-distance-monitoring-and-lock-enhancing.git
+git clone https://github.com/Santhosh1l/Screen-distance-mointor-and-lock-Application.git
 cd my-application
 ```
 

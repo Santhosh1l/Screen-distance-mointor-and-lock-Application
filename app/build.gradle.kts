@@ -35,7 +35,20 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:1.1.0")
     implementation("androidx.camera:camera-view:1.0.0-alpha29")
     implementation("androidx.camera:camera-extensions:1.0.0-alpha29")
+    testImplementation ("junit:junit:4.13.2")
 
+    // Mockito for mocking dependencies
+    testImplementation ("org.mockito:mockito-core:4.8.0")
+
+    // AndroidX Test - Core Testing libraries
+    androidTestImplementation ("androidx.test:core:1.4.0")
+    androidTestImplementation ("androidx.test.ext:junit:1.1.3")
+
+    // Optional: Espresso for UI testing
+    androidTestImplementation ("androidx.test.espresso:espresso-core:3.4.0")
     // ML Kit face detection
     implementation("com.google.mlkit:face-detection:16.0.0")
+    implementation(libs.core)
+    implementation(libs.ext.junit)
+    testImplementation(libs.junit.junit)
 }

@@ -34,6 +34,9 @@ cd my-application
 # SCREENSHOTS
 
 ![Image Alt](https://github.com/Santhosh1l/Screen-distance-mointor-and-lock/blob/cc544d857e321603a0d68916f0c9ec0f9f68d1ee/permission.jpg)  ![Image Alt](https://github.com/Santhosh1l/Screen-distance-mointor-and-lock/blob/cc544d857e321603a0d68916f0c9ec0f9f68d1ee/MESSAGE.jpeg)
+![Image Alt](https://github.com/Santhosh1l/Screen-distance-mointor-and-lock/blob/cc544d857e321603a0d68916f0c9ec0f9f68d1ee/MESSAGE.jpeg)
+
+
 
 
 ## Open the project in Android Studio:
